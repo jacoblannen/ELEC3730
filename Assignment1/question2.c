@@ -1,21 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "ass1.h"
 
 FILE *fp;
 
-int get_data(void)
+int main(void)
 {
 	int	count;
 	int	size_check=0;
 	double *arr;
 	int i;
-	char address[100];
+	char address[50];
 	
 	printf("Enter file path/name:\t");
 	gets(address);
 	
-	fp = fopen(address,"r");
+	fp = fopen(address,"rb");
 
 	if(fp == 0)
 		printf("\nFile could not be opened. Please check that path is correct.\n\n");
@@ -23,7 +22,8 @@ int get_data(void)
 		fread(&count,sizeof(int),1,fp);
 		printf("\nNumber of floats in file: %i\n\n",count);
 
-		arr =(double*)malloc(count*sizeof(double));
+		arr =malloc(count*sizeof(double));
+		fread(arr,sizeof(double),count,fp);
 		
 		fseek(fp,0,SEEK_END);
 		size_check = ftell(fp);
