@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "ass1.h"
 
-int extract_little(char* str, int offset, int n)
-{
+int extract_little(char* str, int offset, int n){
 	int temp;
 	int power;
 	int output = 0;
@@ -24,8 +22,7 @@ int extract_little(char* str, int offset, int n)
 	return(output);
 }
 
-int extract_big(char* str, int offset, int n)
-{
+int extract_big(char* str, int offset, int n){
 	int temp;
 	int power;
 	int output = 0;
