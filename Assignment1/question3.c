@@ -1,12 +1,17 @@
+/* Jacob Lannen
+ * 3162100
+ * Assignment 1 question 3 - Program to open a WAV file and retrieve and display its format info
+ * 27/3/2015
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "ass1.h"
 
 FILE *fp;
 
-int get_wav_format(void){
-	char code[5]={0,0,0,0,0};
-	char address[50];
+int main(void){
+	char address[50];														//String used to retrieve file location from user
+	char code[5]={0,0,0,0,0};												//Various format variables
 	int file_size;
 	int fmt_ck_size;
 	int dat_ck_size;
@@ -18,24 +23,26 @@ int get_wav_format(void){
 	short bit_rate;
 	long int test;
 	
-	printf("Enter file path/name:\t");
+	printf("Enter file path/name:\t");										//Retrieve file from user
 	gets(address);
 	
-	fp = fopen(address,"r");
+	fp = fopen(address,"rb");												//Open file in binary read mode and perform error check
 
 	if(fp == 0)
 		printf("\nFile could not be opened. Please check that path is correct.\n\n");
 	else{
-		fread(&code,sizeof(char),4,fp);
+		fread(&code,sizeof(char),4,fp);										//Read and display format info
 		printf("Chunk ID: %s\n",code);
 		
 		fread(&file_size,sizeof(int),1,fp);
-		printf("File size: %d bytes.\n",file_size);
+		printf("File size: %d bytes.\n",file_size+8);
 		
-		fseek(fp,0,SEEK_END);
+		fseek(fp,0,SEEK_END);												//Check file size matches format, else display error and terminate
 		test=ftell(fp);
 		if(test!=(file_size+8)){
 			printf("File size does not match data.\n");
+			fclose(fp);
+			return(0);
 		}else{
 			fseek(fp,8,SEEK_SET);
 			
@@ -48,7 +55,7 @@ int get_wav_format(void){
 			fread(&fmt_ck_size,4,1,fp);
 			printf("Chunk size: %d bytes.\n",fmt_ck_size);
 			
-			fread(&format_tag,2,1,fp);
+			fread(&format_tag,2,1,fp);										//Check format tag is valid, else display error and terminate
 			if(format_tag==0x0001){
 				printf("Format ID: PCM\n");
 			}else if(format_tag==0x0003){
@@ -84,7 +91,7 @@ int get_wav_format(void){
 		
 		
 	
-	fclose(fp);
+	fclose(fp);																//Close file
 	
 	return(0);
 }
