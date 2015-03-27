@@ -10,7 +10,7 @@
 FILE *fp;														//File pointer for input files
 FILE *fwr;														//File pointer for output file
 
-int main(int argc, char *argv[]){
+int main(void){
 	char code[5]={0,0,0,0,0};									//String used for checking and writing format codes in files, initialised with null termination
 	char address[50];											//String used to retrieve input/output file names from user
 	int file_size;												//File size retrieved from header of input file. Used to error check file.
@@ -79,9 +79,8 @@ int main(int argc, char *argv[]){
 		fclose(fwr);
 		return(0);
 	}else{
-		//fread(&code,sizeof(char),4,fp);							//Read header info from input file and write tonew output file
-		//fwrite(&code,sizeof(char),4,fwr);
-		fcopy(&code,sizeof(char),4,fp,fwr);
+		fread(&code,sizeof(char),4,fp);							//Read header info from input file and write tonew output file
+		fwrite(&code,sizeof(char),4,fwr);
 		
 		fread(&file_size,sizeof(int),1,fp);
 		fwrite(&file_size,sizeof(int),1,fwr);
@@ -146,13 +145,6 @@ int main(int argc, char *argv[]){
 	free(buffer);
 	fclose(fp);
 	fclose(fwr);
-	
-	return(0);
-}
-
-int fcopy(void* address, int element_size, int no_of_elements, FILE* in_file, FILE* out_file){
-	fread(address,element_size,no_of_elements,in_file);
-	fwrite(address,element_size,no_of_elements,out_file);
 	
 	return(0);
 }
