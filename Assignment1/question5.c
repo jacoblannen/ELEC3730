@@ -15,6 +15,10 @@ char string_parser(char* inp, char* array_of_words[]){
 	int j=0;
 	int k=0;
 	
+	if(inp<0||array_of_words<0){										//Check pointers contain valid memory addresses
+		printf("Please ensure pointers point to valid memory address.\n");
+		return(0);
+	}
 	
 	while(inp[i]!=0){													//While loop till end of input string (if input is NULL the loop ends)
 		if(inp[i]!=' '){												//If current char in input string is not a space move it into the buffer and increment indicies
