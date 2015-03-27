@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-FILE *fp;
+FILE *fp;																	//Pointer to input file
 
 int main(void){
 	char address[50];														//String used to retrieve file location from user
