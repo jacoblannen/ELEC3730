@@ -9,28 +9,10 @@
 #include <fcntl.h>														//Included for read/write flags
 #include <unistd.h>														//Included for read/write operations
 #include <string.h>
-#include "ass2.h"														//Included for function prototypes
 #include "alt_types.h"
 #include "system.h"
 #include "io.h"
-
-#define lcd_write_cmd(base, data)                     IOWR(base, 0, data)
-#define lcd_read_cmd(base)                            IORD(base, 1)
-#define lcd_write_data(base, data)                    IOWR(base, 2, data)
-#define lcd_read_data(base)                           IORD(base, 3)
-
-alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]);
-alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]);
-alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]);
-
-void LCD_Init();
-void LCD_Show_Text(char* Text);
-void LCD_Line2();
-
-typedef struct{
-		alt_8* com_string;
-		alt_32 (*com_fun)(alt_8 argc, alt_8* argv[]);
-	}command;
+#include "ass2.h"														//Included for function prototypes
 
 int main()
 {
@@ -82,10 +64,10 @@ int main()
 			if(strcmp(commandList[i].com_string, out_array[0])==0){
 				err_check = commandList[i].com_fun(arg_count,out_array);
 				switch(err_check){
-					case -1:
+					case ERR_NO_1:
 						write(uart_write,"ERROR: ledr requires a single argument between 0 and 262143.\r\n",62);
 						break;
-					case -2:
+					case ERR_NO_2:
 						write(uart_write,"ERROR: Sum too large to be displayed.",37);
 						break;
 				}
@@ -105,7 +87,7 @@ alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]){
 	arg = atoi(arg_strings[1]);
 
 	if(no_args!=2||arg<0||arg>262143){
-		return(-1);
+		return(ERR_NO_1);
 	}else{
 		IOWR(LED_RED_BASE, 0, arg&0x3ffff);
 	}
@@ -126,7 +108,7 @@ alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]){
 	}
 
 	if(sum>9999999999999999){
-		return(-2);
+		return(ERR_NO_2);
 	}
 
 	sprintf(disp_str,"%lld",sum);
@@ -150,30 +132,4 @@ alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]){
 		IOWR(SEG7_DISPLAY_BASE,i,Map[temp]);
 	}
 	return(0);
-}
-
-void LCD_Init() {
-  IOWR(LCD_16207_0_BASE,0,0x38);
-  usleep(2000);
-  IOWR(LCD_16207_0_BASE,0,0x0C);
-  usleep(2000);
-  IOWR(LCD_16207_0_BASE,0,0x01);
-  usleep(2000);
-  IOWR(LCD_16207_0_BASE,0,0x06);
-  usleep(2000);
-  IOWR(LCD_16207_0_BASE,0,0x80);
-  usleep(2000);
-}
-
-void LCD_Line2() {
-  lcd_write_cmd(LCD_16207_0_BASE,0xC0);
-  usleep(2000);
-}
-
-void LCD_Show_Text(char* Text) {
-  int i;
-  for(i=0;i<strlen(Text);i++) {
-    lcd_write_data(LCD_16207_0_BASE,Text[i]);
-    usleep(2000);
-  }
 }
