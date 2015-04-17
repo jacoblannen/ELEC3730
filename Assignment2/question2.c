@@ -1,6 +1,6 @@
 /* Jacob Lannen
  * 3162100
- * Assignment 1 Question 1
+ * Assignment 1 Question 2
  * 1/4/2015
  */
 
@@ -14,9 +14,18 @@
 #include "system.h"
 #include "io.h"
 
+#define lcd_write_cmd(base, data)                     IOWR(base, 0, data)
+#define lcd_read_cmd(base)                            IORD(base, 1)
+#define lcd_write_data(base, data)                    IOWR(base, 2, data)
+#define lcd_read_data(base)                           IORD(base, 3)
+
 alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]);
 alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]);
 alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]);
+
+void LCD_Init();
+void LCD_Show_Text(char* Text);
+void LCD_Line2();
 
 typedef struct{
 		alt_8* com_string;
@@ -40,31 +49,45 @@ int main()
 			{NULL,NULL}
 	};
 
+	LCD_Init();
 	buffer[0]=0;
+	write(uart_write,">> ",3);
 
 	while(1){
 		while(buffer[0]!=0xd){												//Loop until "enter" keystroke
 			read(uart_read,buffer,1);										//Read from UART
 			write(uart_write,buffer,1);										//Write to UART
 			printf("%c",buffer[0]);											//Display on console
-			cmd_string[i]=buffer[0];										//Write input to cmd_string
-			i++;
+			if(buffer[0]==0x7F){
+				if(i!=0){
+					i--;
+				}
+				cmd_string[i]=NULL;
+			}else{
+				cmd_string[i]=buffer[0];										//Write input to cmd_string
+				i++;
+			}
 		}
 		printf("\n");
 
-		cmd_string[i-1]=0;													//Null terminate command string
+		cmd_string[i-1]=NULL;													//Null terminate command string
 		arg_count = string_parser(cmd_string,out_array);					//Use string_parser() to separate arguments of cmd_string
 		if(arg_count==0){
 			write(uart_write,"ERROR: Input string starts with NULL.",37);
 		}
 
-		write(uart_write,"\r\n",2);
+		write(uart_write,"\r\n>> ",5);
 
 		for(i=0; commandList[i].com_string!=NULL; i++){
 			if(strcmp(commandList[i].com_string, out_array[0])==0){
 				err_check = commandList[i].com_fun(arg_count,out_array);
-				if(err_check==-1){
-					write(uart_write,"ERROR: ledr requires a single argument between 0 and 262143.\r\n",62);
+				switch(err_check){
+					case -1:
+						write(uart_write,"ERROR: ledr requires a single argument between 0 and 262143.\r\n",62);
+						break;
+					case -2:
+						write(uart_write,"ERROR: Sum too large to be displayed.",37);
+						break;
 				}
 			}
 		}
@@ -77,10 +100,9 @@ int main()
 }
 
 alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]){
-	long arg=0;
-	char *ptr=0;
+	int arg=0;
 
-	arg = strtol(arg_strings[1],ptr,10);
+	arg = atoi(arg_strings[1]);
 
 	if(no_args!=2||arg<0||arg>262143){
 		return(-1);
@@ -92,23 +114,66 @@ alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]){
 }
 
 alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]){
-	printf("add\n");
+	int i=1;
+	long long sum=0;
+	char disp_str[17];
+
+	LCD_Init();
+
+	for(i=1;i<no_args;i++){
+		sum+= (atoll(arg_strings[i]));
+		printf("\n%lld",sum);
+	}
+
+	if(sum>9999999999999999){
+		return(-2);
+	}
+
+	sprintf(disp_str,"%lld",sum);
+
+	LCD_Show_Text(disp_str);
+
 	return(0);
 }
+
 alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]){
-	int temp = IORD(SWITCH_PIO_BASE,0);
+	int input = IORD(SWITCH_PIO_BASE,0);
 	int i = 0;
-	char string[6]={0,0,0,0,0,0};
+	int temp=0;
 	static alt_u8  Map[] = {
 			63, 6, 91, 79, 102, 109, 125, 7,
 	        127, 111, 119, 124, 57, 94, 121, 113
 	};
 
-	sprintf(string, "%0x", temp);
-	printf("%s",string);
 	for(i=0;i<5;i++){
-		IOWR(SEG7_DISPLAY_BASE,i,Map[(string[5-i]-'0')]);
-		printf("%d\n",(string[5-i]-'0'));
+		temp = (input>>(i*4))&0xf;
+		IOWR(SEG7_DISPLAY_BASE,i,Map[temp]);
 	}
 	return(0);
+}
+
+void LCD_Init() {
+  IOWR(LCD_16207_0_BASE,0,0x38);
+  usleep(2000);
+  IOWR(LCD_16207_0_BASE,0,0x0C);
+  usleep(2000);
+  IOWR(LCD_16207_0_BASE,0,0x01);
+  usleep(2000);
+  IOWR(LCD_16207_0_BASE,0,0x06);
+  usleep(2000);
+  IOWR(LCD_16207_0_BASE,0,0x80);
+  usleep(2000);
+}
+
+void LCD_Line2() {
+  lcd_write_cmd(LCD_16207_0_BASE,0xC0);
+  usleep(2000);
+}
+
+void LCD_Show_Text(char* Text) {
+  int i;
+  for(i=0;i<strlen(Text);i++) {
+    lcd_write_data(LCD_16207_0_BASE,Text[i]);
+    usleep(2000);
+  }
 }
