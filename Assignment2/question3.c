@@ -1,40 +1,48 @@
 #include <stdio.h>
-#include <fcntl.h>														//Included for write flags
-#include <unistd.h>														//Included for write operations
-#include <string.h>														//Included for strlen()
-#include "efs.h"														//Included for EFSL functions
+#include <fcntl.h>														//Included for read/write flags
+#include <unistd.h>														//Included for read/write operations
+#include <string.h>
+#include "efs.h"
 #include "ls.h"
 
 int main()
 {
-	EmbeddedFileSystem efsl;											//Create file system
-	DirList list;														//Create directory list
-	esint8 ret;															//Error check variable
+	EmbeddedFileSystem efsl;
+	DirList list;
+	esint8 ret;
+	int uart_read=open("/dev/uart_0",O_RDONLY);							//Open UART with a read variable
 	int uart_write=open("/dev/uart_0",O_WRONLY);						//Open UART with a write variable
-	char disp_string[100];												//String to be displayed on PuTTY
+	char buffer[100];													//Buffer to receive/transmit UART data
+	char disp_string[100];
+	int i=0;															//Counter used to check number of files in directory
 
-	write(uart_write,"Initialising SD card...\r\n",25);					//Display initialisation status in PuTTY
-	ret = efs_init(&efsl, "/dev/sda");									//Initialise SD card and display whether successful
+	write(uart_write,"Initialising SD card...\r\n",25);
+	ret = efs_init(&efsl, "/dev/sda");
 	if(ret==0){
-		write(uart_write,"SD card correctly initialised.\r\n",32);
+		write(uart_write,"SD card correctly initialised.\r\n\n",33);
 	}else{
-		write(uart_write,"Could not initialise.\r\n",23);
+		write(uart_write,"Could not initialise.\r\n\n",24);
 		return(0);
 	}
 
-	ls_openDir(&list, &efsl.myFs, "/");									//Open root directory
+	ls_openDir(&list, &efsl.myFs, "/");
 
-	while(ls_getNext(&list)==0){										//Loop for whole directory
-		if(list.currentEntry.Attribute & 0x10){							//Display directory names
-			sprintf(disp_string,"Directory: %s\n",list.currentEntry.FileName);
+	while(ls_getNext(&list)==0){
+		if(list.currentEntry.Attribute & 0x10){
+			sprintf(disp_string,"Dir:\t %s\n\r",list.currentEntry.FileName);
 			write(uart_write,disp_string,strlen(disp_string));
-		}else{															//Display file names/sizes
-			sprintf(disp_string,"File: %s\t Filesize: %d\n",list.currentEntry.FileName,list.currentEntry.FileSize);
+		}else{
+			sprintf(disp_string,"File:\t %s\t Size: %d bytes\n\r",list.currentEntry.FileName,list.currentEntry.FileSize);
 			write(uart_write,disp_string,strlen(disp_string));
 		}
+		i++;
 	}
 
-	fs_unmount(&efs.myFs);												//Unmount directory
+	if(i==0){
+		write(uart_write,"Root directory empty.\r\n",23);
+	}
+
+	fs_umount(&efsl.myFs);
 
 	return (0);
 }
