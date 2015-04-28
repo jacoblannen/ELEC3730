@@ -1,8 +1,7 @@
-/*
- * LCD_functions.c
- *
- *  Created on: 17/04/2015
- *      Author: c3162100
+/* Jacob Lannen
+ * 3162100
+ * LCD Functions for Altera DE2 board
+ * 17/4/2015
  */
 
 #include <stdio.h>
