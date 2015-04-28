@@ -1,8 +1,7 @@
-/*
- * ass2.h
- *
- *  Created on: 01/04/2015
- *      Author: c3162100
+/* Jacob Lannen
+ * 3162100
+ * Header for Assignment 2
+ * 1/4/2015
  */
 
 #ifndef ASS2_H_
@@ -27,6 +26,12 @@ typedef struct{																		// Define command structure
 alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]);								// Prototypes for Q2 functions
 alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]);
 alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]);
+
+alt_32 do_del(alt_8 no_args, alt_8* arg_strings[]);									// Prototypes for Q4 functions
+alt_32 do_copy(alt_8 no_args, alt_8* arg_strings[]);
+alt_32 do_newdir(alt_8 no_args, alt_8* arg_strings[]);
+alt_32 do_open(alt_8 no_args, alt_8* arg_strings[]);
+alt_32 do_help(alt_8 no_args, alt_8* arg_strings[]);
 
 void LCD_Init();																	// Prototypes for LCD functions
 void LCD_Show_Text(char* Text);
