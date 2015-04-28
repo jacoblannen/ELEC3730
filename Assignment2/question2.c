@@ -1,6 +1,6 @@
 /* Jacob Lannen
  * 3162100
- * Assignment 1 Question 2
+ * Assignment 2 Question 2
  * 1/4/2015
  */
 
