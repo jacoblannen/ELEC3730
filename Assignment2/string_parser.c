@@ -1,3 +1,8 @@
+/* Jacob Lannen
+ * 3162100
+ * String parser function for assignment 2
+ * 1/4/2015
+ */
 #include <stdio.h>
 #include <stdlib.h>														//Included for malloc()
 #include <string.h>														//Included for strcpy() and strlen()
