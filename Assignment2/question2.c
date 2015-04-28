@@ -1,7 +1,7 @@
 /* Jacob Lannen
  * 3162100
  * Assignment 2 Question 2
- * 1/4/2015
+ * 15/4/2015
  */
 
 #include <stdio.h>
