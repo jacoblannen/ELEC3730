@@ -26,6 +26,7 @@ typedef struct{																		// Define command structure
 alt_32 do_ledr(alt_8 no_args, alt_8* arg_strings[]);								// Prototypes for Q2 functions
 alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]);
 alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]);
+alt_32 do_help1(alt_8 no_args, alt_8* arg_strings[]);
 
 alt_32 do_del(alt_8 no_args, alt_8* arg_strings[]);									// Prototypes for Q4 functions
 alt_32 do_copy(alt_8 no_args, alt_8* arg_strings[]);
