@@ -85,12 +85,12 @@ int main()
 		}
 
 		cmd_string[i-1]=NULL;													//Null terminate command string
-		for(i=0;i<strlen(cmd_string);i++){
-			cmd_string[i]=tolower(cmd_string[i]);
-		}
 		arg_count = string_parser(cmd_string,out_array);						//Use string_parser() to separate arguments of cmd_string
 		if(arg_count==0){
 			write(uart_write,"\r\nERROR: Input string starts with NULL.\r\n>> ",44);
+		}
+		for(i=0;i<strlen(out_array[0]);i++){
+			out_array[0][i]=tolower(out_array[0][i]);
 		}
 
 		for(i=0; commandList[i].com_string!=NULL; i++){							//Compare input to command strings
