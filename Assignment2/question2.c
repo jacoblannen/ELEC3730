@@ -1,7 +1,7 @@
 /* Jacob Lannen
  * 3162100
  * Assignment 2 Question 2
- * 15/4/2015
+ * 1/4/2015
  */
 
 #include <stdio.h>
@@ -18,21 +18,22 @@ int main()
 {
 	int uart_read=open("/dev/uart_0",O_RDONLY);							//Open UART with a read variable
 	int uart_write=open("/dev/uart_0",O_WRONLY);						//Open UART with a write variable
-	char buffer[100];													//Buffer to receive/transmit UART data
-	char cmd_string[100];												//String received from UART at carriage return
-	char* out_array[50];												//Array of strings used in string_parser()
+	char buffer[100]={NULL};													//Buffer to receive/transmit UART data
+	char cmd_string[100]={NULL};												//String received from UART at carriage return
+	char* out_array[50]={NULL};												//Array of strings used in string_parser()
 	int i=0;															//Loop counter
 	int arg_count=0;													//Number of input arguments/words received from command string
 	int err_check=0;													//Error check variable
+	int cmd_flag=0;														//Flag for command checking
 	const command commandList[]={										//Array of command line arguments
 			{"ledr",do_ledr},
 			{"add",do_add},
 			{"switch",do_switch},
+			{"help",do_help1},
 			{NULL,NULL}
 	};
 
 	LCD_Init();															//Initialise LCD
-	buffer[0]=0;														//Initialise UART input buffer
 	write(uart_write,">> ",3);											//Display command line prompt
 
 	while(1){
@@ -54,22 +55,35 @@ int main()
 		cmd_string[i-1]=NULL;												//Null terminate command string
 		arg_count = string_parser(cmd_string,out_array);					//Use string_parser() to separate arguments of cmd_string
 		if(arg_count==0){
-			write(uart_write,"ERROR: Input string starts with NULL.\r\n>> ",42);
+			write(uart_write,"ERROR: Input string starts with NULL.",37);
 		}
+		for(i=0;i<strlen(out_array[0]);i++){
+					out_array[0][i]=tolower(out_array[0][i]);
+		}
+
+		cmd_flag=0;
 
 		for(i=0; commandList[i].com_string!=NULL; i++){						//Compare input to command strings
 			if(strcmp(commandList[i].com_string, out_array[0])==0){
 				err_check = commandList[i].com_fun(arg_count,out_array);	//Run function with command line arguments
+				cmd_flag=1;
 				switch(err_check){											//Display appropriate error messages for returned error values
 					case ERR_NO_1:
-						write(uart_write,"ERROR: ledr requires a single argument between 0 and 262143.\r\n>> ",65);
+						write(uart_write,"ERROR: ledr requires a single argument between 0 and 262143.",60);
 						break;
 					case ERR_NO_2:
-						write(uart_write,"ERROR: Sum too large to be displayed.\r\n>> ",42);
+						write(uart_write,"ERROR: Sum too large to be displayed.",37);
 						break;
 				}
 			}
 		}
+
+		if(cmd_flag==0){
+			write(uart_write,"\r\nERROR: Invalid command. Use 'help' command to view list of valid commands.",76);
+		}
+
+		write(uart_write,"\r\n>> ",5);
+
 		buffer[0]=0;														//Clear buffer
 		i=0;																//Reset index
 	}
@@ -102,7 +116,7 @@ alt_32 do_add(alt_8 no_args, alt_8* arg_strings[]){							//Function to take arb
 		sum+= (atoll(arg_strings[i]));
 	}
 
-	if(sum>LCD_LIMIT){														//Check sum can be displayed on LCD
+	if(sum>LCD_LIMIT||sum<0){												//Check sum can be displayed on LCD
 		return(ERR_NO_2);
 	}
 
@@ -126,5 +140,17 @@ alt_32 do_switch(alt_8 no_args, alt_8* arg_strings[]){						//Function to take t
 		temp = (input>>(i*4))&0xf;
 		IOWR(SEG7_DISPLAY_BASE,i,Map[temp]);
 	}
+	return(0);
+}
+
+alt_32 do_help1(alt_8 no_args, alt_8* arg_strings[]){							//Function to display help for available functions
+	int uart_write = open("/dev/uart_0",O_WRONLY);								//Open UART with a write variable
+
+	write(uart_write,"\r\n",2);
+	write(uart_write,"\tledr\t\t<int>\t\t\tDisplay input integer as binary number on red LEDs.\r\n",68);
+	write(uart_write,"\tswitch\t\t\t\t\tDisplay status of switches as hexadecimal number on 7-segment display.\r\n",84);
+	write(uart_write,"\tadd\t\t<int> <int>...\t\tAdd an arbitrary number of integers.\r\n",60);
+	write(uart_write,"\thelp\t\t\t\t\tDisplay this message.\r\n",33);
+
 	return(0);
 }
