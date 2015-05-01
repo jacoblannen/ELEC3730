@@ -1,6 +1,6 @@
 /* Jacob Lannen
  * 3162100
- * Assignment 1 Question 1
+ * Assignment 2 Question 1
  * 1/4/2015
  */
 
@@ -20,12 +20,21 @@ int main()
 	int i=0;															//Loop counter
 	int arg_count=0;													//Number of input arguments/words received from command string
 
-	while(buffer[0]!=0xd){												//Loop until "enter" keystroke
-		read(uart_read,buffer,1);										//Read from UART
-		write(uart_write,buffer,1);										//Write to UART
-		printf("%c",buffer[0]);											//Display on console
-		cmd_string[i]=buffer[0];										//Write input to cmd_string
-		i++;
+	write(uart_write,">> ",3);
+
+	while(buffer[0]!=0xd){													//Loop until "enter" keystroke
+		read(uart_read,buffer,1);											//Read from UART
+		write(uart_write,buffer,1);											//Write to UART
+		printf("%c",buffer[0]);												//Display on console
+		if(buffer[0]==0x7F){												//Check for backspace
+			if(i!=0){														//If not first char of string decrement index and replace previous entry with null
+				i--;
+			}
+			cmd_string[i]=NULL;
+		}else{
+			cmd_string[i]=buffer[0];										//Write input to cmd_string
+			i++;
+		}
 	}
 
 	cmd_string[i-1]=0;													//Null terminate command string
