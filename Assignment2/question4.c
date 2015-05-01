@@ -85,6 +85,9 @@ int main()
 		}
 
 		cmd_string[i-1]=NULL;													//Null terminate command string
+		for(i=0;i<strlen(cmd_string);i++){
+			cmd_string[i]=tolower(cmd_string[i]);
+		}
 		arg_count = string_parser(cmd_string,out_array);						//Use string_parser() to separate arguments of cmd_string
 		if(arg_count==0){
 			write(uart_write,"\r\nERROR: Input string starts with NULL.\r\n>> ",44);
@@ -93,6 +96,8 @@ int main()
 		for(i=0; commandList[i].com_string!=NULL; i++){							//Compare input to command strings
 			if(strcmp(commandList[i].com_string, out_array[0])==0){
 				commandList[i].com_fun(arg_count,out_array);					//Run function with command line arguments
+			}else{
+				write(uart_write,"\r\nERROR: Invalid command. Use 'help' command to view list of valid commands.",76);
 			}
 		}
 
