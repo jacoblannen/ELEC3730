@@ -81,7 +81,6 @@ void set_format(wav_fmt format);
 void playFile(SD_FILE file);
 
 int extract_little(euint8*,euint32,euint32);
-int extract_big(euint8*,euint32,euint32);
 
 euint32 do_open(euint8 no_args, euint8* arg_strings[]);
 euint32 do_play(euint8 no_args, euint8* arg_strings[]);
