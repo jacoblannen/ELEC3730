@@ -22,6 +22,7 @@ void task1(void* pdata)
 			{"play",do_play},
 			{"new",do_new_plist},
 			{"add",do_add_plist},
+			{"plist",do_play_plist},
 			{"help",do_help},
 			{NULL,NULL}
 	};
@@ -75,12 +76,27 @@ void task1(void* pdata)
 }
 void task2(void* pdata)
 {
-	euint8 err;
-
+	esint8 err;
+	int uart_write=open("/dev/uart_0",O_WRONLY);								//Open UART with a write variable
 	while (1)
 	{
 		OSSemPend(PlaySem,0,&err);
-		playFile(&nowPlaying);
+		if(trackCount){
+			if(currentTrack<trackCount){
+				err = file_fopen(&nowPlaying, &efsl.myFs, plist[currentTrack], 'r');	//Open source file and display error if not found
+				if(err==-1){
+					write(uart_write,"\r\nERROR: File does not exist.\r\n",31);
+				}else{
+					playFile(&nowPlaying);
+					OSSemPost(PlaySem);
+					currentTrack++;
+				}
+			}else{
+				currentTrack=0;
+			}
+		}else{
+			playFile(&nowPlaying);
+		}
 	}
 }
 
@@ -88,8 +104,7 @@ void task3(void* pdata)
 {
 	while (1)
 	{
-//		printf("Hello from task3\n");
-		OSTimeDlyHMSM(0, 0, 0, 10);
+		OSTimeDly(10);
 	}
 }
 /* The main function creates two task and starts multi-tasking */
@@ -100,6 +115,9 @@ int main(void)
 	char disp_string[128]={NULL};												//String used to display data over UART
 	int i = 0;
 	esint8 ret;																	//Error check for efs_init()
+
+	currentTrack = 0;
+	trackCount = 0;
 
 	if(!AUDIO_Init()) {
 		printf("Unable to initialize audio codec\n");
@@ -275,6 +293,8 @@ euint32 do_play(euint8 no_args, euint8* arg_strings[]){							//Function to copy
 
 	strcat(tempString,arg_strings[1]);										//Create filepath strings from file name and directories
 
+	currentTrack = 0;
+	trackCount = 0;
 	error_check = file_fopen(&nowPlaying, &efsl.myFs, tempString, 'r');	//Open source file and display error if not found
 	if(error_check==-1){
 		write(uart_write,"\r\nERROR: File does not exist.\r\n",31);
@@ -314,17 +334,18 @@ euint32 do_add_plist(euint8 no_args, euint8* arg_strings[]){								//Function t
 	char fileString[128] = {NULL};
 	int uart_write=open("/dev/uart_0",O_WRONLY);								//Open UART with a write variable
 	FILE list;
+	FILE song;
 
 	strcpy(fileString,currentDir);
 	strcat(fileString,arg_strings[1]);
-	strcat(fileString,"\n");
+	strcat(fileString," ");
 
 	strcpy(plistString,"/plists/");
 	strcat(plistString,arg_strings[2]);
 	strcat(plistString,".lst");
 
 	error_check = file_fopen(&list, &efsl.myFs, plistString, 'a');
-	file_write(&list,sizeof(fileString),fileString);
+	file_write(&list,strlen(fileString),fileString);
 
 	file_fclose(&list);
 	fs_umount(&efsl.myFs);														//Unmount/save SD card
@@ -339,18 +360,24 @@ euint32 do_play_plist(euint8 no_args, euint8* arg_strings[]){							//Function t
 	char fileString[128] = {NULL};
 	int error_check=0;															//Error check variable
 	int i = 0;
+	int j=0;
 
 	strcpy(plistString,"/plists/");
 	strcat(plistString,arg_strings[1]);
+	strcat(plistString,".lst");
 
 	error_check = file_fopen(&currentPlist, &efsl.myFs, plistString, 'r');	//Open source file and display error if not found
 	if(error_check==-1){
 		write(uart_write,"\r\nERROR: File does not exist.\r\n",31);
 	}
 
-	while(file_read(&currentPlist,1024,buffer));
+	error_check = file_read(&currentPlist,1024,buffer);
 
-	error_check = file_fopen(&nowPlaying, &efsl.myFs, fileString, 'r');	//Open source file and display error if not found
+	trackCount = string_parser(buffer,plist);
+
+	currentTrack = 0;
+
+	error_check = file_fopen(&nowPlaying, &efsl.myFs, plist[currentTrack], 'r');	//Open source file and display error if not found
 	if(error_check==-1){
 		write(uart_write,"\r\nERROR: File does not exist.\r\n",31);
 	}else{
